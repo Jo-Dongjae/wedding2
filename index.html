@@ -138,17 +138,30 @@
         }
         .btn-contact:active { background-color: #4a4a4a; color: #fff; }
 
-        /* 갤러리 */
-        .gallery { padding: 80px 20px; background-color: #f8f8f8; } 
+        /* --- 액자식 3장 슬라이드 갤러리 --- */
+        .gallery { padding: 80px 15px; background-color: #f8f8f8; } 
         .gallery-wrapper {
             display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
-            scroll-behavior: smooth; gap: 15px; padding: 10px 0 30px;
-            -ms-overflow-style: none; scrollbar-width: none; margin-top: 20px;
+            scroll-behavior: smooth; gap: 10px; padding: 15px 5px 30px;
+            -ms-overflow-style: none; scrollbar-width: none; margin-top: 15px;
         }
         .gallery-wrapper::-webkit-scrollbar { display: none; }
-        .gallery-item {
-            flex: 0 0 80%; aspect-ratio: 4/5; object-fit: cover; border-radius: 8px;
-            scroll-snap-align: center; box-shadow: 0 6px 15px rgba(0,0,0,0.1); cursor: pointer; filter: grayscale(10%) contrast(95%);
+        
+        /* 액자 스타일 (한 화면 3장) */
+        .gallery-frame {
+            flex: 0 0 calc((100% - 20px) / 3);
+            background: #ffffff;
+            padding: 6px 6px 12px 6px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+            scroll-snap-align: start;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .gallery-frame:active { transform: scale(0.96); }
+        .gallery-frame img {
+            width: 100%; aspect-ratio: 3/4; object-fit: cover;
+            border-radius: 2px; display: block; filter: grayscale(5%) contrast(98%);
         }
 
         /* 달력 및 D-Day */
@@ -327,7 +340,7 @@
         </button>
     </section>
 
-    <!-- 갤러리 (가로 스와이프) -->
+    <!-- 갤러리 (액자식 3장 슬라이드) -->
     <section class="gallery fade-wrap" id="gallerySection">
         <h2 class="section-title">우리의 순간들</h2>
         <p class="section-subtitle">
@@ -335,9 +348,9 @@
             GALLERY
         </p>
         <div class="gallery-wrapper" id="gallerySlider">
-            <!-- JS에서 이미지 15장이 삽입됩니다 -->
+            <!-- JS에서 액자 형태로 이미지들이 삽입됩니다 -->
         </div>
-        <p style="font-size:0.8rem; color:#777; margin-top:10px; text-align:center;">사진을 좌우로 넘겨보세요</p>
+        <p style="font-size:0.8rem; color:#777; margin-top:10px; text-align:center;">사진을 터치하면 크게 볼 수 있습니다</p>
     </section>
 
     <!-- 달력 및 D-Day -->
@@ -619,7 +632,7 @@
     if (starsCanvas) {
         const ctx = starsCanvas.getContext('2d');
         let stars = [];
-        const numStars = 45; // 별빛 개수
+        const numStars = 45;
 
         function resizeCanvas() {
             starsCanvas.width = starsCanvas.offsetWidth;
@@ -634,8 +647,8 @@
                 y: Math.random() * starsCanvas.height,
                 radius: Math.random() * 1.8 + 0.6,
                 alpha: Math.random() * 0.8 + 0.2,
-                speedY: Math.random() * 0.5 + 0.2, // 천천히 내려오는 속도
-                speedX: (Math.random() - 0.5) * 0.25, // 약간 좌우로 흔들림
+                speedY: Math.random() * 0.5 + 0.2,
+                speedX: (Math.random() - 0.5) * 0.25,
                 twinkleSpeed: Math.random() * 0.02 + 0.008,
                 twinkleDir: Math.random() > 0.5 ? 1 : -1
             });
@@ -651,7 +664,6 @@
                 if (star.alpha >= 0.95) star.twinkleDir = -1;
                 if (star.alpha <= 0.2) star.twinkleDir = 1;
 
-                // 화면 하단 벗어나면 다시 상단에서 생성
                 if (star.y > starsCanvas.height) {
                     star.y = 0;
                     star.x = Math.random() * starsCanvas.width;
@@ -913,7 +925,7 @@
 
     initGuestbook();
 
-    // --- 갤러리 슬라이드 ---
+    // --- 액자식 갤러리 슬라이드 (한 화면 3장 & 3초 슬라이드) ---
     const images = [
         "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80",
         "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80",
@@ -938,26 +950,33 @@
     let currentIndex = 0;
     let autoSlideInterval;
 
+    // 액자 프레임 생성 및 DOM 추가
     images.forEach((src, index) => {
+        const frame = document.createElement('div');
+        frame.className = 'gallery-frame';
+        frame.onclick = () => openModal(index);
+
         const img = document.createElement('img');
         img.src = src;
-        img.className = 'gallery-item';
-        img.onclick = () => openModal(index);
-        if(gallerySlider) gallerySlider.appendChild(img);
+        img.alt = `웨딩 사진 ${index + 1}`;
+
+        frame.appendChild(img);
+        if(gallerySlider) gallerySlider.appendChild(frame);
     });
 
+    // 3초마다 3장 단위(한 화면 폭) 스와이프
     function startAutoSlide() {
         autoSlideInterval = setInterval(() => {
             if (!gallerySlider) return;
             const scrollPos = gallerySlider.scrollLeft;
-            const itemWidth = gallerySlider.clientWidth * 0.8 + 15; 
-            
-            if (scrollPos + gallerySlider.clientWidth >= gallerySlider.scrollWidth - 10) {
+            const scrollPageWidth = gallerySlider.clientWidth; // 3장이 들어간 한 페이지 전체 폭
+
+            if (scrollPos + gallerySlider.clientWidth >= gallerySlider.scrollWidth - 15) {
                 gallerySlider.scrollTo({ left: 0, behavior: 'smooth' });
             } else {
-                gallerySlider.scrollTo({ left: scrollPos + itemWidth, behavior: 'smooth' });
+                gallerySlider.scrollTo({ left: scrollPos + scrollPageWidth, behavior: 'smooth' });
             }
-        }, 3000); // 3초 간격
+        }, 3000);
     }
 
     if (gallerySlider) {
@@ -966,6 +985,7 @@
         startAutoSlide();
     }
 
+    // 모달 크게 보기 기능
     function openModal(index) {
         currentIndex = index;
         modalImage.src = images[currentIndex];
