@@ -33,20 +33,29 @@
             position: fixed; inset: 0; background-color: #1a1a1a;
             z-index: 99999; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            transition: opacity 1s ease, visibility 1s ease;
+            transition: opacity 1.2s ease, visibility 1.2s ease;
         }
         .env-wrapper {
             position: relative; width: 300px; height: 200px; cursor: pointer; perspective: 1000px;
         }
         .env-back { position: absolute; inset: 0; background: #2c2c2c; border-radius: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        
+        /* 편지 속지 디자인 디테일 */
         .env-letter {
             position: absolute; left: 10px; right: 10px; bottom: 10px; height: 180px;
             background: #ffffff; transition: transform 1s ease 0.4s;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-family: 'Gowun Batang', serif;
+            padding: 12px; text-align: center;
         }
-        .env-letter h3 { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 5px; font-weight: 700; }
-        .env-letter p { font-size: 1rem; color: #666; }
+        .env-sub { font-size: 0.65rem; color: #888888; letter-spacing: 2px; margin-bottom: 2px; }
+        .env-letter h3 { font-size: 1.35rem; color: #1a1a1a; margin-bottom: 2px; font-weight: 700; }
+        .env-main-text { font-size: 0.9rem; color: #555555; margin-bottom: 8px; }
+        .env-date-info { 
+            font-size: 0.8rem; color: #222222; font-weight: 700; 
+            border-top: 1px solid #e2e2e2; padding-top: 6px; width: 85%; letter-spacing: 0.5px; 
+        }
+
         .env-front {
             position: absolute; inset: 0; background: #3a3a3a;
             clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0, 50% 40%); border-radius: 4px;
@@ -58,7 +67,7 @@
             border-radius: 4px 4px 0 0; z-index: 2;
         }
         .env-wrapper.open .env-flap { transform: rotateX(180deg); z-index: 0; }
-        .env-wrapper.open .env-letter { transform: translateY(-80px); z-index: 1; }
+        .env-wrapper.open .env-letter { transform: translateY(-85px); z-index: 1; }
         .env-guide {
             margin-top: 50px; font-size: 1.1rem; color: #ffffff;
             font-weight: 700; animation: pulseEnv 1.5s infinite; cursor: pointer;
@@ -150,7 +159,7 @@
             100% { stroke-dashoffset: 0; opacity: 1; }
         }
 
-        /* 선명하게 수정된 메인 날짜 */
+        /* 메인 날짜 */
         .cover-date { 
             font-size: 1rem; 
             font-weight: 700; 
@@ -343,8 +352,10 @@
     <div class="env-wrapper" id="envWrapper">
         <div class="env-back"></div>
         <div class="env-letter">
+            <span class="env-sub">WEDDING INVITATION</span>
             <h3>동재 ♥ 혜령</h3>
-            <p>초대합니다</p>
+            <p class="env-main-text">소중한 분들을 초대합니다</p>
+            <div class="env-date-info">2027. 12. 05. SUN PM 2:40</div>
         </div>
         <div class="env-front"></div>
         <div class="env-flap"></div>
@@ -789,11 +800,12 @@
             }).catch(e => console.log("BGM 자동 재생 차단됨:", e));
         }
 
+        // 요청하신 2.3초(2300ms) 대기 후 메인 커버 전환
         setTimeout(() => {
             const overlay = document.getElementById('envelopeOverlay');
             overlay.style.opacity = '0';
-            setTimeout(() => { overlay.style.display = 'none'; }, 1000);
-        }, 1500);
+            setTimeout(() => { overlay.style.display = 'none'; }, 1200);
+        }, 2300);
     }
 
     // --- 토스트 알림 ---
