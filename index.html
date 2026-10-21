@@ -112,7 +112,7 @@
         /* 커버 이름 */
         .cover-names { 
             font-size: 1.8rem; font-weight: 700; margin-bottom: 12px; 
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); color: #ffffff; 
+            text-shadow: 1px 1px 6px rgba(0,0,0,0.7); color: #ffffff; 
             display: flex; align-items: center; justify-content: center; gap: 6px;
         }
 
@@ -150,7 +150,15 @@
             100% { stroke-dashoffset: 0; opacity: 1; }
         }
 
-        .cover-date { font-size: 0.9rem; font-weight: 400; letter-spacing: 3px; opacity: 0.9; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); color: #f0f0f0; }
+        /* 선명하게 수정된 메인 날짜 */
+        .cover-date { 
+            font-size: 1rem; 
+            font-weight: 700; 
+            letter-spacing: 3px; 
+            color: #ffffff; 
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.8);
+            margin-top: 4px;
+        }
 
         /* 공통 타이틀 */
         .section-title { font-size: 1.3rem; color: #1a1a1a; font-weight: 700; text-align: center; letter-spacing: 3px; }
@@ -179,30 +187,52 @@
         }
         .btn-contact:active { background-color: #4a4a4a; color: #fff; }
 
-        /* --- 액자식 3장 슬라이드 갤러리 --- */
-        .gallery { padding: 80px 15px; background-color: #f8f8f8; } 
-        .gallery-wrapper {
-            display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
-            scroll-behavior: smooth; gap: 10px; padding: 15px 5px 30px;
-            -ms-overflow-style: none; scrollbar-width: none; margin-top: 15px;
+        /* --- 3열 그리드 펼침/접힘 갤러리 --- */
+        .gallery { padding: 80px 15px; background-color: #f8f8f8; text-align: center; } 
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 20px;
         }
-        .gallery-wrapper::-webkit-scrollbar { display: none; }
-        
-        /* 액자 스타일 (한 화면 3장) */
         .gallery-frame {
-            flex: 0 0 calc((100% - 20px) / 3);
             background: #ffffff;
-            padding: 6px 6px 12px 6px;
+            padding: 5px 5px 8px 5px;
             border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.06);
-            scroll-snap-align: start;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(0, 0, 0, 0.04);
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease, opacity 0.3s ease;
         }
         .gallery-frame:active { transform: scale(0.96); }
         .gallery-frame img {
             width: 100%; aspect-ratio: 3/4; object-fit: cover;
             border-radius: 2px; display: block; filter: grayscale(5%) contrast(98%);
+        }
+        .gallery-frame.hidden {
+            display: none;
+        }
+
+        /* 사진 더보기/접기 버튼 */
+        .btn-gallery-more {
+            margin-top: 30px;
+            padding: 12px 32px;
+            background-color: #ffffff;
+            border: 1px solid #2b2b2b;
+            color: #2b2b2b;
+            font-size: 0.88rem;
+            font-family: inherit;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        .btn-gallery-more:active {
+            background-color: #2b2b2b;
+            color: #ffffff;
         }
 
         /* 달력 및 D-Day */
@@ -390,17 +420,23 @@
         </button>
     </section>
 
-    <!-- 갤러리 (액자식 3장 슬라이드) -->
+    <!-- 갤러리 (3열 그리드 & 더보기/접기) -->
     <section class="gallery fade-wrap" id="gallerySection">
         <h2 class="section-title">우리의 순간들</h2>
         <p class="section-subtitle">
             <svg class="sub-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             GALLERY
         </p>
-        <div class="gallery-wrapper" id="gallerySlider">
-            <!-- JS에서 액자 형태로 이미지들이 삽입됩니다 -->
-        </div>
-        <p style="font-size:0.8rem; color:#777; margin-top:10px; text-align:center;">사진을 터치하면 크게 볼 수 있습니다</p>
+        
+        <!-- 3열 그리드 레이아웃 -->
+        <div class="gallery-grid" id="galleryGrid"></div>
+
+        <!-- 더보기 / 접기 버튼 -->
+        <button class="btn-gallery-more" id="btnGalleryMore" onclick="toggleGallery()">
+            사진 더보기 <span id="moreIcon">▾</span>
+        </button>
+
+        <p style="font-size:0.8rem; color:#777; margin-top:15px;">사진을 터치하면 크게 볼 수 있습니다</p>
     </section>
 
     <!-- 달력 및 D-Day -->
@@ -975,7 +1011,7 @@
 
     initGuestbook();
 
-    // --- 액자식 갤러리 슬라이드 (한 화면 3장 & 3초 슬라이드) ---
+    // --- 15장 갤러리 (3열 2줄 기본 배치 + 펼침/접힘 토글) ---
     const images = [
         "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80",
         "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80",
@@ -994,16 +1030,17 @@
         "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=600&q=80"
     ];
 
-    const gallerySlider = document.getElementById('gallerySlider');
+    const galleryGrid = document.getElementById('galleryGrid');
+    const btnGalleryMore = document.getElementById('btnGalleryMore');
     const modal = document.getElementById('photoModal');
     const modalImage = document.getElementById('modalImage');
     let currentIndex = 0;
-    let autoSlideInterval;
+    let isGalleryExpanded = false;
 
-    // 액자 프레임 생성 및 DOM 추가
+    // 갤러리 그리드 생성 (7번째 사진부터는 처음에 hidden)
     images.forEach((src, index) => {
         const frame = document.createElement('div');
-        frame.className = 'gallery-frame';
+        frame.className = 'gallery-frame' + (index >= 6 ? ' hidden' : '');
         frame.onclick = () => openModal(index);
 
         const img = document.createElement('img');
@@ -1011,28 +1048,30 @@
         img.alt = `웨딩 사진 ${index + 1}`;
 
         frame.appendChild(img);
-        if(gallerySlider) gallerySlider.appendChild(frame);
+        if(galleryGrid) galleryGrid.appendChild(frame);
     });
 
-    // 3초마다 3장 단위(한 화면 폭) 스와이프
-    function startAutoSlide() {
-        autoSlideInterval = setInterval(() => {
-            if (!gallerySlider) return;
-            const scrollPos = gallerySlider.scrollLeft;
-            const scrollPageWidth = gallerySlider.clientWidth;
+    // 펼치기 / 접기 함수
+    function toggleGallery() {
+        isGalleryExpanded = !isGalleryExpanded;
+        const frames = document.querySelectorAll('.gallery-grid .gallery-frame');
 
-            if (scrollPos + gallerySlider.clientWidth >= gallerySlider.scrollWidth - 15) {
-                gallerySlider.scrollTo({ left: 0, behavior: 'smooth' });
-            } else {
-                gallerySlider.scrollTo({ left: scrollPos + scrollPageWidth, behavior: 'smooth' });
+        frames.forEach((frame, index) => {
+            if (index >= 6) {
+                if (isGalleryExpanded) {
+                    frame.classList.remove('hidden');
+                } else {
+                    frame.classList.add('hidden');
+                }
             }
-        }, 3000);
-    }
+        });
 
-    if (gallerySlider) {
-        gallerySlider.addEventListener('touchstart', () => clearInterval(autoSlideInterval));
-        gallerySlider.addEventListener('touchend', () => { setTimeout(startAutoSlide, 2000); });
-        startAutoSlide();
+        if (isGalleryExpanded) {
+            btnGalleryMore.innerHTML = '사진 접기 <span id="moreIcon">▴</span>';
+        } else {
+            btnGalleryMore.innerHTML = '사진 더보기 <span id="moreIcon">▾</span>';
+            document.getElementById('gallerySection').scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     // 모달 크게 보기 기능
@@ -1041,13 +1080,11 @@
         modalImage.src = images[currentIndex];
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
-        clearInterval(autoSlideInterval);
     }
 
     function closeModal() {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto'; 
-        startAutoSlide();
     }
 
     function changeSlide(direction) {
