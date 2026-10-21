@@ -13,14 +13,18 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
 
+    <!-- Firebase SDK (방명록 DB 연동용) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         
         body { 
-            background-color: #222222; /* 모바일 프레임을 돋보이게 해주는 외각 차콜 배경 */
+            background-color: #222222;
             font-family: 'Nanum Myeongjo', serif; 
-            color: #2c2c2c; /* 본문 기본 선명한 차콜 텍스트 */
+            color: #2c2c2c;
             line-height: 1.8; overflow-x: hidden; 
         }
 
@@ -63,7 +67,7 @@
         
         .mobile-container { 
             max-width: 480px; margin: 0 auto; 
-            background-color: #ffffff; /* 깨끗하고 화사한 메인 화이트 바탕 */
+            background-color: #ffffff;
             min-height: 100vh; box-shadow: 0 0 25px rgba(0,0,0,0.25); 
             position: relative;
         }
@@ -89,13 +93,21 @@
             position: relative; height: 100vh; height: 100dvh; text-align: center;
             background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
             background-size: cover; background-position: center; display: flex; flex-direction: column; color: #ffffff;
+            overflow: hidden;
         }
         .main-cover::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.75) 100%); z-index: 1; }
         .main-cover::after {
             content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 250px;
-            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.95) 80%, #ffffff 100%); z-index: 2;
+            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.95) 80%, #ffffff 100%); z-index: 3;
         }
-        .cover-text-bottom { position: absolute; bottom: 7%; left: 0; width: 100%; z-index: 3; text-align: center; letter-spacing: 2px; font-family: 'Gowun Batang', serif; }
+        
+        /* 별빛 애니메이션 캔버스 */
+        #starsCanvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2;
+        }
+
+        .cover-text-bottom { position: absolute; bottom: 7%; left: 0; width: 100%; z-index: 4; text-align: center; letter-spacing: 2px; font-family: 'Gowun Batang', serif; }
         .cover-names { font-size: 1.8rem; font-weight: 700; margin-bottom: 12px; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); color: #ffffff; }
         .cover-date { font-size: 0.9rem; font-weight: 400; letter-spacing: 3px; opacity: 0.9; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); color: #f0f0f0; }
 
@@ -126,7 +138,7 @@
         }
         .btn-contact:active { background-color: #4a4a4a; color: #fff; }
 
-        /* --- 2. 가로 스와이프 갤러리 --- */
+        /* 갤러리 */
         .gallery { padding: 80px 20px; background-color: #f8f8f8; } 
         .gallery-wrapper {
             display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
@@ -267,6 +279,9 @@
 <div class="mobile-container">
     <!-- 메인 커버 -->
     <section class="main-cover">
+        <!-- 은은한 별빛 애니메이션 캔버스 -->
+        <canvas id="starsCanvas"></canvas>
+        
         <div class="cover-text-bottom">
             <h1 class="cover-names">동재 & 혜령</h1>
             <p class="cover-date">2027. 12. 05. SUN 2:40 PM</p>
@@ -599,6 +614,63 @@
 <div id="toast" class="toast"></div>
 
 <script>
+    // --- 메인 커버 은은한 별빛 애니메이션 ---
+    const starsCanvas = document.getElementById('starsCanvas');
+    if (starsCanvas) {
+        const ctx = starsCanvas.getContext('2d');
+        let stars = [];
+        const numStars = 45; // 별빛 개수
+
+        function resizeCanvas() {
+            starsCanvas.width = starsCanvas.offsetWidth;
+            starsCanvas.height = starsCanvas.offsetHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        for (let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * starsCanvas.width,
+                y: Math.random() * starsCanvas.height,
+                radius: Math.random() * 1.8 + 0.6,
+                alpha: Math.random() * 0.8 + 0.2,
+                speedY: Math.random() * 0.5 + 0.2, // 천천히 내려오는 속도
+                speedX: (Math.random() - 0.5) * 0.25, // 약간 좌우로 흔들림
+                twinkleSpeed: Math.random() * 0.02 + 0.008,
+                twinkleDir: Math.random() > 0.5 ? 1 : -1
+            });
+        }
+
+        function animateStars() {
+            ctx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+            stars.forEach(star => {
+                star.y += star.speedY;
+                star.x += star.speedX;
+                star.alpha += star.twinkleSpeed * star.twinkleDir;
+
+                if (star.alpha >= 0.95) star.twinkleDir = -1;
+                if (star.alpha <= 0.2) star.twinkleDir = 1;
+
+                // 화면 하단 벗어나면 다시 상단에서 생성
+                if (star.y > starsCanvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * starsCanvas.width;
+                }
+                if (star.x < 0) star.x = starsCanvas.width;
+                if (star.x > starsCanvas.width) star.x = 0;
+
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 253, 235, ${star.alpha})`;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                ctx.fill();
+            });
+            requestAnimationFrame(animateStars);
+        }
+        animateStars();
+    }
+
     // --- 1. 봉투 열기 애니메이션 & 음악 재생 ---
     let isEnvelopeOpened = false;
     let isBgmPlaying = false;
@@ -612,7 +684,6 @@
         document.getElementById('envWrapper').classList.add('open');
         document.querySelector('.env-guide').style.display = 'none';
 
-        // 봉투 터치 시 음악 재생
         if (bgmAudio && bgmAudio.paused) {
             bgmAudio.play().then(() => {
                 bgmBtn.classList.add('playing');
@@ -728,19 +799,58 @@
     // --- 계좌번호 아코디언 ---
     function toggleAccordion(id) { document.getElementById(id).classList.toggle('show'); }
 
-    // --- 방명록 로직 ---
+    // --- 방명록 (Firebase 연동 & LocalStorage 하이브리드) ---
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    let db = null;
+    let isFirebaseActive = false;
+
+    try {
+        if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            isFirebaseActive = true;
+        }
+    } catch (e) {}
+
     let messages = [];
-    try { messages = JSON.parse(localStorage.getItem('wedding_guestbook')) || []; } catch (e) {}
+
+    function initGuestbook() {
+        if (isFirebaseActive && db) {
+            db.ref('guestbook').on('value', (snapshot) => {
+                const data = snapshot.val();
+                messages = [];
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        messages.push({ id: key, ...data[key] });
+                    });
+                    messages.sort((a, b) => b.timestamp - a.timestamp);
+                }
+                renderMessages();
+            });
+        } else {
+            try { messages = JSON.parse(localStorage.getItem('wedding_guestbook')) || []; } catch (e) {}
+            renderMessages();
+        }
+    }
 
     function renderMessages() {
         const list = document.getElementById('guestbookList');
         if (!list) return;
         list.innerHTML = '';
-        messages.forEach((msg, index) => {
+        messages.forEach((msg) => {
             const div = document.createElement('div');
             div.className = 'guest-msg-item';
             div.innerHTML = `
-                <button class="btn-delete" onclick="deleteMessage(${index})">×</button>
+                <button class="btn-delete" onclick="deleteMessage('${msg.id || msg.timestamp}')">×</button>
                 <div class="guest-msg-header">
                     <span class="guest-name">${msg.name}</span>
                     <span class="guest-date">${msg.date}</span>
@@ -763,28 +873,47 @@
 
         const today = new Date();
         const dateString = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+        const timestamp = Date.now();
+        const newMsg = { name, pwd, text, date: dateString, timestamp };
 
-        messages.unshift({ name, pwd, text, date: dateString });
-        try { localStorage.setItem('wedding_guestbook', JSON.stringify(messages)); } catch (e) {}
-        
-        showToast('축하 메시지가 등록되었습니다.');
+        if (isFirebaseActive && db) {
+            db.ref('guestbook').push(newMsg)
+                .then(() => showToast('축하 메시지가 등록되었습니다.'))
+                .catch(() => alert('등록 중 오류가 발생했습니다.'));
+        } else {
+            messages.unshift({ id: timestamp, ...newMsg });
+            try { localStorage.setItem('wedding_guestbook', JSON.stringify(messages)); } catch (e) {}
+            showToast('축하 메시지가 등록되었습니다.');
+            renderMessages();
+        }
+
         nameInput.value = ''; pwdInput.value = ''; msgInput.value = '';
-        renderMessages();
     }
 
-    function deleteMessage(index) {
+    function deleteMessage(id) {
+        const targetMsg = messages.find(m => (m.id == id || m.timestamp == id));
+        if (!targetMsg) return;
+
         const inputPwd = prompt('작성 시 입력한 비밀번호를 입력해주세요.');
         if (inputPwd === null) return; 
-        if (inputPwd === messages[index].pwd) {
-            messages.splice(index, 1);
-            try { localStorage.setItem('wedding_guestbook', JSON.stringify(messages)); } catch (e) {}
-            renderMessages();
-            showToast('삭제되었습니다.');
+
+        if (inputPwd === targetMsg.pwd) {
+            if (isFirebaseActive && db && targetMsg.id) {
+                db.ref('guestbook/' + targetMsg.id).remove()
+                    .then(() => showToast('삭제되었습니다.'))
+                    .catch(() => alert('삭제 실패했습니다.'));
+            } else {
+                messages = messages.filter(m => (m.id != id && m.timestamp != id));
+                try { localStorage.setItem('wedding_guestbook', JSON.stringify(messages)); } catch (e) {}
+                renderMessages();
+                showToast('삭제되었습니다.');
+            }
         } else { alert('비밀번호가 일치하지 않습니다.'); }
     }
-    renderMessages();
 
-    // --- 2 & 3. 가로 스와이프 갤러리 및 자동 슬라이드 로직 ---
+    initGuestbook();
+
+    // --- 갤러리 슬라이드 ---
     const images = [
         "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80",
         "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80",
@@ -828,7 +957,7 @@
             } else {
                 gallerySlider.scrollTo({ left: scrollPos + itemWidth, behavior: 'smooth' });
             }
-        }, 3000);
+        }, 3000); // 3초 간격
     }
 
     if (gallerySlider) {
@@ -856,7 +985,6 @@
         modalImage.src = images[currentIndex];
     }
 
-    // 갤러리 모달 스와이프 기능
     let touchstartX = 0;
     let touchendX = 0;
     modal.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
