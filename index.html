@@ -52,6 +52,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-family: 'Gowun Batang', serif;
             padding: 12px; text-align: center;
+            will-change: transform;
         }
         .env-sub { font-size: 0.65rem; color: #888888; letter-spacing: 2px; margin-bottom: 2px; }
         .env-letter h3 { font-size: 1.35rem; color: #1a1a1a; margin-bottom: 2px; font-weight: 700; }
@@ -63,23 +64,21 @@
 
         .env-front {
             position: absolute; inset: 0; background: #ffffff;
-            clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0, 50% 40%); border-radius: 4px;
+            clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0, 50% 40%);
         }
-        .env-glow { z-index: 0; }
         .env-flap {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #ffffff; clip-path: polygon(0 0, 100% 0, 50% 55%);
             transform-origin: top;
             transition: transform 0.6s cubic-bezier(0.45, 0, 0.25, 1) 0.25s, z-index 0s linear 0.55s;
             will-change: transform; backface-visibility: visible;
-            border-radius: 4px 4px 0 0; z-index: 4;
+            z-index: 4;
         }
         .env-wrapper.open .env-flap { transform: rotateX(180deg); z-index: 0; }
 
         /* 편지: 봉투 안에서 위로 빠져나온 뒤, 봉투 앞으로 내려와 놓임 */
         /* ① V자 틈으로 내용이 살짝 보임 → ② 잠시 멈춤 → ③ 위로 쭉 꺼냄 → ④ 봉투 앞으로 내려와 전체가 보임 */
         /* 구간마다 끝 속도와 다음 구간 시작 속도를 맞춰서 멈칫하는 느낌 없이 이어짐 */
-        .env-letter { will-change: transform; }
         .env-wrapper.open .env-letter { animation: letterOut 1.2s linear 0.7s forwards; }
         @keyframes letterOut {
             0%   { transform: translateY(0);                  z-index: 2; animation-timing-function: cubic-bezier(0.3, 0.15, 0.5, 0.7); }
@@ -95,7 +94,7 @@
             position: absolute; left: 50%; top: 108px; width: 54px; height: 50px;
             margin: -25px 0 0 -27px; z-index: 5; pointer-events: none;
             filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.16));
-            transform-origin: 20% 80%;
+            transform-origin: 20% 80%; will-change: transform, opacity;
         }
         .env-sticker svg { width: 100%; height: 100%; display: block; overflow: visible; }
         .env-wrapper.open .env-sticker { animation: stickerPeel 0.6s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
@@ -107,7 +106,6 @@
 
         /* 봉투 앞면 V자 가장자리에 옅은 그림자 → 흰 편지가 주머니 안에 있는 게 보임 */
         .env-front-shade { position: absolute; inset: 0; z-index: 3; pointer-events: none; filter: drop-shadow(0 -1.5px 2px rgba(0,0,0,0.12)); will-change: transform; }
-        .env-sticker { will-change: transform, opacity; }
 
         /* 봉투 선: 바깥 테두리, 덮개 가장자리, 아래쪽 접힌 선 */
         .env-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
@@ -157,10 +155,13 @@
         .cover-text-bottom { position: absolute; bottom: 7%; left: 0; width: 100%; z-index: 4; text-align: center; letter-spacing: 2px; font-family: 'Gowun Batang', serif; }
         
         /* 커버 이름 */
-        .cover-names { 
-            font-size: 1.8rem; font-weight: 700; margin-bottom: 12px; 
-            text-shadow: 1px 1px 6px rgba(0,0,0,0.7); color: #ffffff; 
-            display: flex; align-items: center; justify-content: center; gap: 6px;
+        /* 만년필로 쓴 듯한 필기체 (살짝 기울임 + 부드러운 번짐) */
+        .cover-names {
+            font-family: 'Nanum Pen Script', 'Gowun Batang', cursive;
+            font-size: 2.2rem; font-weight: 400; letter-spacing: 3px; line-height: 1;
+            margin-bottom: 14px; color: #ffffff;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
 
         /* --- 흰색 하트 라인 드로잉 모션 --- */
@@ -169,8 +170,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             margin: 0 4px;
         }
 
@@ -183,11 +184,11 @@
         .heart-drawing-line {
             fill: none;
             stroke: #ffffff;
-            stroke-width: 2;
+            stroke-width: 1.6;
             stroke-linecap: round;
             stroke-dasharray: 85;
             stroke-dashoffset: 85;
-            animation: drawWhiteHeart 2s ease-out 1.5s forwards paused;
+            animation: drawWhiteHeart 2s ease-out 2.4s forwards paused;
         }
 
         @keyframes drawWhiteHeart {
@@ -387,20 +388,10 @@
            편지 → 화면 가득 확대 → 빛이 번지며 → 사진 초점이 맞고
            → 이름이 한 글자씩 떠오르고 → 하트가 그려지고 → 꽃잎이 내림
            ============================================================ */
-        .env-wrapper { transform-origin: 50% 50%; will-change: transform, opacity; }
-        .env-glow {
-            position: absolute; inset: -70px; border-radius: 50%; pointer-events: none;
-            background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 65%);
-            opacity: 0; transition: opacity 1.2s ease 0.3s;
-        }
-        .env-wrapper.open .env-glow { opacity: 1; }
-
-        /* 편지가 위로 살짝 떠오르며 사라짐 (transform/opacity만 사용 → 모바일에서도 부드럽게) */
         /* 봉투는 크기 그대로 서서히 사라지고, 편지지만 앞으로 다가오듯 확대 */
         #envelopeOverlay.zoom .env-back,
         #envelopeOverlay.zoom .env-front-shade,
-        #envelopeOverlay.zoom .env-flap,
-        #envelopeOverlay.zoom .env-glow { opacity: 0; transition: opacity 0.8s ease; }
+        #envelopeOverlay.zoom .env-flap { opacity: 0; transition: opacity 0.8s ease; }
         #envelopeOverlay.zoom .env-letter { animation: letterZoom 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         @keyframes letterZoom {
             0%   { transform: translateY(-20px) scale(1.12); opacity: 1; z-index: 6; }
@@ -424,6 +415,21 @@
         body.revealed .rv { opacity: 1; transform: none; }
         body.revealed .heart-drawing-line { animation-play-state: running; }
 
+        /* 이름이 손글씨처럼 써지는 효과 (왼쪽에서 오른쪽으로 펼쳐짐) */
+        .write {
+            display: inline-block; padding: 0 8px;
+            clip-path: inset(-20% 100% -20% 0);
+            transform: rotate(-3deg); transform-origin: 50% 80%;
+        }
+        body.revealed .write { animation: writeIn 1.5s cubic-bezier(0.45, 0.05, 0.4, 1) var(--w, 0s) forwards; }
+        @keyframes writeIn {
+            from { clip-path: inset(-20% 100% -20% 0); }
+            to   { clip-path: inset(-20% -10% -20% 0); }
+        }
+
+        #petalCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+
+        /* 움직임 줄이기 설정을 켠 기기: 연출을 짧게 하거나 생략 */
         @media (prefers-reduced-motion: reduce) {
             #envelopeOverlay.zoom .env-letter { animation: none; transform: translateY(-20px) scale(1.12); z-index: 6; }
             .env-wrapper.open .env-letter { animation-duration: 0.01s; animation-delay: 0s; }
@@ -432,41 +438,9 @@
             .cover-bg { transform: none; transition: opacity 0.4s ease; }
             .rv { transform: none; transition-duration: 0.3s; transition-delay: 0s; }
             .heart-drawing-line { animation-delay: 0s; }
+            .write { clip-path: none; }
+            body.revealed .write { animation: none; }
         }
-
-
-
-
-        /* 이름이 손글씨처럼 써지는 효과 (왼쪽에서 오른쪽으로 펼쳐짐) */
-        .write {
-            display: inline-block; padding: 0 6px;
-            clip-path: inset(-20% 100% -20% 0);
-        }
-        body.revealed .write { animation: writeIn 1.5s cubic-bezier(0.45, 0.05, 0.4, 1) var(--w, 0s) forwards; }
-        @keyframes writeIn {
-            from { clip-path: inset(-20% 100% -20% 0); }
-            to   { clip-path: inset(-20% -10% -20% 0); }
-        }
-        .heart-drawing-line { animation-delay: 2.4s !important; }
-        @media (prefers-reduced-motion: reduce) {
-            .write { clip-path: none; animation: none !important; }
-            .heart-drawing-line { animation-delay: 0s !important; }
-        }
-
-
-        #petalCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-
-
-        /* 커버 이름: 만년필로 쓴 듯한 필기체 (살짝 기울임 + 부드러운 번짐) */
-        .cover-names {
-            font-family: 'Nanum Pen Script', 'Gowun Batang', cursive;
-            font-size: 2.2rem; font-weight: 400; letter-spacing: 3px; line-height: 1;
-            gap: 8px; margin-bottom: 14px;
-            text-shadow: 0 1px 10px rgba(0,0,0,0.5);
-        }
-        .cover-names .write { padding: 0 8px; transform: rotate(-3deg); transform-origin: 50% 80%; }
-        .animated-white-heart { width: 30px; height: 30px; }
-        .heart-drawing-line { stroke-width: 1.6; }
 
         /* 토스트 알림 */
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background-color: rgba(30, 30, 30, 0.9); color: #fff; padding: 12px 24px; border-radius: 25px; font-size: 0.85rem; z-index: 10000; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; border: 1px solid #444; }
@@ -479,7 +453,6 @@
 <div id="envelopeOverlay" onclick="openInvitation()">
     <div class="env-wrapper" id="envWrapper">
         <div class="env-back"></div>
-        <div class="env-glow"></div>
         <div class="env-letter">
             <span class="env-sub">WEDDING INVITATION</span>
             <h3>동재 ♥ 혜령</h3>
@@ -780,7 +753,7 @@
                 청첩장 링크 복사
             </button>
         </div>
-        <p class="footer-copyright">Copyright © 2027 Dongjae & Haeryung All Rights Reserved.</p>
+        <p class="footer-copyright">Designed &amp; handcrafted with love by Dongjae<br>© 2027 Dongjae &amp; Haeryung</p>
     </section>
 </div>
 
