@@ -111,6 +111,37 @@
         .env-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
         .env-lines path { fill: none; stroke: #c4c4c4; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
         .env-front-shade .env-lines { clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0, 50% 40%); }
+
+        /* 봉투 앞면에 손글씨로 적히는 받는 사람 이름 */
+        .env-to {
+            position: absolute; left: 0; right: 0; top: 150px; text-align: center;
+            font-family: 'Nanum Pen Script', 'Gowun Batang', cursive; font-size: 1.7rem; line-height: 1.2; color: #2b2b2b;
+            transform: rotate(-3deg); pointer-events: none;
+        }
+        .env-to span { display: inline-block; padding: 0 6px; clip-path: inset(-20% 100% -20% 0); }
+        .env-to.written span { clip-path: none; }
+        .env-to.writing span { animation: writeIn 1.2s cubic-bezier(0.45, 0.05, 0.4, 1) forwards; }
+
+        /* 이름 입력칸 */
+        .env-name-form {
+            margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+            font-family: 'Gowun Batang', serif; transition: opacity 0.4s ease;
+        }
+        .env-name-form.hide { opacity: 0; pointer-events: none; }
+        .env-name-label { font-size: 0.95rem; color: #555555; }
+        .env-name-row { display: flex; align-items: flex-end; gap: 10px; }
+        .env-name-input {
+            width: 160px; padding: 6px 4px; border: none; border-bottom: 1px solid #2b2b2b; border-radius: 0;
+            background: transparent; font-family: inherit; font-size: 1.05rem; color: #1a1a1a; text-align: center; outline: none;
+        }
+        .env-name-input::placeholder { color: #aaaaaa; }
+        .env-name-input:focus { border-bottom-width: 2px; }
+        .env-name-btn {
+            padding: 7px 18px; border: 1px solid #2b2b2b; border-radius: 20px; background: #2b2b2b; color: #ffffff;
+            font-family: inherit; font-size: 0.9rem; cursor: pointer;
+        }
+        .env-name-btn:active { background: #4a4a4a; }
+        .env-name-skip { background: none; border: none; color: #888888; font-family: inherit; font-size: 0.85rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 4px; }
         .env-guide {
             margin-top: 50px; font-size: 1.1rem; color: #555555;
             font-weight: 700; animation: pulseEnv 1.5s infinite; cursor: pointer;
@@ -491,6 +522,8 @@
                 <path d="M0 0 L150 80 L300 0" stroke-width="2"/>
                 <path d="M0.5 199.5 L128 112 M299.5 199.5 L172 112" stroke-width="1"/>
             </svg>
+            <!-- 받는 사람 이름 (하객이 입력하면 손글씨로 써짐) -->
+            <div class="env-to" id="envTo" aria-live="polite"><span id="envToText"></span></div>
         </div>
         <div class="env-flap">
             <svg class="env-lines" viewBox="0 0 300 200" preserveAspectRatio="none" aria-hidden="true">
@@ -508,7 +541,16 @@
             </svg>
         </div>
     </div>
-    <div class="env-guide">봉투를 터치하여 열어주세요</div>
+    <!-- 받는 사람 이름 입력 (건너뛸 수 있음) -->
+    <form class="env-name-form" id="envNameForm" onclick="event.stopPropagation()" onsubmit="submitGuestName(event)">
+        <label class="env-name-label" for="envNameInput">받으시는 분의 성함을 적어주세요</label>
+        <div class="env-name-row">
+            <input type="text" id="envNameInput" class="env-name-input" maxlength="10" autocomplete="name" placeholder="성함">
+            <button type="submit" class="env-name-btn">확인</button>
+        </div>
+        <button type="button" class="env-name-skip" onclick="skipGuestName()">건너뛰기</button>
+    </form>
+    <div class="env-guide" style="display:none">봉투를 터치하여 열어주세요</div>
 </div>
 
 <!-- BGM 오디오 & 컨트롤 버튼 -->
@@ -958,8 +1000,63 @@
     const bgmAudio = document.getElementById('bgmAudio');
     const bgmBtn = document.getElementById('bgmBtn');
 
+    // --- 받는 사람 이름: 하객이 직접 적으면 봉투에 손글씨로 써짐 (휴대폰에 기억) ---
+    const GUEST_NAME_KEY = 'wedding_guest_name';
+    let isNameStepDone = false;
+
+    function writeGuestName(name, animate) {
+        const box = document.getElementById('envTo');
+        document.getElementById('envToText').textContent = name + ' 님께';
+        box.classList.remove('writing', 'written');
+        void box.offsetWidth; // 애니메이션 다시 시작
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        box.classList.add(animate && !reduce ? 'writing' : 'written');
+
+        // 편지 문구와 참석 여부·방명록 이름 칸에도 반영
+        document.querySelector('.env-main-text').textContent = name + ' 님을 초대합니다';
+        ['rsvpName', 'guestName'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input && !input.value) input.value = name;
+        });
+    }
+
+    function finishNameStep(delay) {
+        const form = document.getElementById('envNameForm');
+        form.classList.add('hide');
+        setTimeout(() => {
+            form.style.display = 'none';
+            document.querySelector('.env-guide').style.display = '';
+            isNameStepDone = true;
+        }, delay);
+    }
+
+    function submitGuestName(e) {
+        e.preventDefault();
+        const input = document.getElementById('envNameInput');
+        const name = input.value.trim();
+        if (!name) { showToast('성함을 입력해주세요.'); input.focus(); return; }
+        input.blur();
+        try { localStorage.setItem(GUEST_NAME_KEY, name); } catch (err) {}
+        writeGuestName(name, true);
+        finishNameStep(1300); // 이름이 다 써진 뒤 "봉투를 터치하여 열어주세요" 표시
+    }
+
+    function skipGuestName() { finishNameStep(400); }
+
+    // 예전에 이름을 적었던 휴대폰이면 바로 이름이 적힌 봉투로 시작
+    (function initGuestName() {
+        let saved = '';
+        try { saved = localStorage.getItem(GUEST_NAME_KEY) || ''; } catch (err) {}
+        if (saved) {
+            writeGuestName(saved, false);
+            document.getElementById('envNameForm').style.display = 'none';
+            document.querySelector('.env-guide').style.display = '';
+            isNameStepDone = true;
+        }
+    })();
+
     function openInvitation() {
-        if (isEnvelopeOpened) return;
+        if (isEnvelopeOpened || !isNameStepDone) return;
         isEnvelopeOpened = true;
 
         const overlay = document.getElementById('envelopeOverlay');
