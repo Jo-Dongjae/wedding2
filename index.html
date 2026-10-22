@@ -1002,6 +1002,7 @@
 
     // --- 받는 사람 이름: 하객이 직접 적으면 봉투에 손글씨로 써짐 (휴대폰에 기억) ---
     const GUEST_NAME_KEY = 'wedding_guest_name';
+    const GUEST_NAME_TTL = 5 * 60 * 1000; // 이름 기억 시간: 5분 (지나면 다시 입력)
     let isNameStepDone = false;
 
     function writeGuestName(name, animate) {
@@ -1047,17 +1048,26 @@
         const name = input.value.trim();
         if (!name) { showToast('성함을 입력해주세요.'); input.focus(); return; }
         input.blur();
-        try { localStorage.setItem(GUEST_NAME_KEY, name); } catch (err) {}
+        try { localStorage.setItem(GUEST_NAME_KEY, JSON.stringify({ name, savedAt: Date.now() })); } catch (err) {}
         writeGuestName(name, true);
         finishNameStep(1500); // 이름이 다 써지고 잠시 뒤 봉투가 열림
     }
 
     function skipGuestName() { finishNameStep(450); }
 
-    // 예전에 이름을 적었던 휴대폰이면 바로 이름이 적힌 봉투로 시작
+    // 5분 안에 이름을 적었던 휴대폰이면 바로 이름이 적힌 봉투로 시작 (5분이 지났으면 지우고 다시 입력)
     (function initGuestName() {
         let saved = '';
-        try { saved = localStorage.getItem(GUEST_NAME_KEY) || ''; } catch (err) {}
+        try {
+            const data = JSON.parse(localStorage.getItem(GUEST_NAME_KEY) || 'null');
+            if (data && data.name && Date.now() - data.savedAt < GUEST_NAME_TTL) {
+                saved = data.name;
+            } else {
+                localStorage.removeItem(GUEST_NAME_KEY);
+            }
+        } catch (err) {
+            try { localStorage.removeItem(GUEST_NAME_KEY); } catch (e) {}
+        }
         if (saved) {
             writeGuestName(saved, false);
             document.getElementById('envNameForm').style.display = 'none';
