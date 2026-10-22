@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>동재 ♥ 혜령 결혼합니다</title>
     
     <meta property="og:title" content="동재 ♥ 혜령 결혼합니다">
@@ -12,6 +12,8 @@
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <!-- 카카오 공유 SDK -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" crossorigin="anonymous"></script>
 
     <!-- Firebase SDK (방명록 DB 연동용) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -320,7 +322,8 @@
 
         /* 모달 공통 */
         .modal { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); flex-direction: column; align-items: center; justify-content: center; }
-        .modal-content { max-width: 100%; max-height: 80vh; object-fit: contain; }
+        .modal-content { max-width: 100%; max-height: 80vh; object-fit: contain; touch-action: none; user-select: none; -webkit-user-select: none; transform-origin: center center; will-change: transform; }
+        .zoom-hint { position: absolute; bottom: 28px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.7); font-size: 0.8rem; pointer-events: none; }
         .modal-close { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 35px; cursor: pointer; }
         .modal-prev, .modal-next { position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 30px; padding: 15px; cursor: pointer; }
         .modal-prev { left: 10px; } .modal-next { right: 10px; }
@@ -551,9 +554,9 @@
         </table>
 
         <div class="d-day-container">
-            <p class="d-day-text">동재, 혜령의 결혼식이</p>
+            <p class="d-day-text" id="ddayPre">동재, 혜령의 결혼식이</p>
             <span class="d-day-highlight" id="ddayCount">00일 00시간 00분 00초</span>
-            <p class="d-day-text">남았습니다.</p>
+            <p class="d-day-text" id="ddayPost">남았습니다.</p>
         </div>
     </section>
 
@@ -714,6 +717,7 @@
     <span class="modal-prev" onclick="changeSlide(-1)">&#10094;</span>
     <img class="modal-content" id="modalImage">
     <span class="modal-next" onclick="changeSlide(1)">&#10095;</span>
+    <p class="zoom-hint">두 손가락으로 확대 · 두 번 탭하면 확대/축소</p>
 </div>
 
 <!-- 연락하기 팝업 모달 -->
@@ -986,33 +990,88 @@
     function copyAddress() { copyText("서울특별시 강남구 언주로 508", "주소가 복사되었습니다."); }
     function copyAccount(acc) { copyText(acc, "계좌번호가 복사되었습니다."); }
     function copyLink() { copyText(window.location.href, "청첩장 링크가 복사되었습니다."); }
+    // --- 카카오톡 공유 ---
+    // 카카오 개발자 사이트(developers.kakao.com)에서 발급한 'JavaScript 키'를 아래에 넣어주세요.
+    // 그리고 [앱 > 플랫폼 > Web]에 청첩장 주소(https://jo-dongjae.github.io)를 등록해야 합니다.
+    const KAKAO_JS_KEY = "YOUR_KAKAO_JS_KEY";
+    const SHARE_URL = "https://jo-dongjae.github.io/wedding/";
+    const SHARE_IMAGE = "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+
+    try {
+        if (window.Kakao && KAKAO_JS_KEY !== "YOUR_KAKAO_JS_KEY" && !Kakao.isInitialized()) {
+            Kakao.init(KAKAO_JS_KEY);
+        }
+    } catch (e) { console.log('카카오 SDK 초기화 실패', e); }
+
     function shareKakao() {
+        const kakaoReady = window.Kakao && Kakao.isInitialized && Kakao.isInitialized();
+        if (kakaoReady) {
+            try {
+                Kakao.Share.sendDefault({
+                    objectType: 'feed',
+                    content: {
+                        title: '동재 ♥ 혜령 결혼합니다',
+                        description: '2027년 12월 5일 일요일 오후 2:40\n상록아트홀',
+                        imageUrl: SHARE_IMAGE,
+                        link: { mobileWebUrl: SHARE_URL, webUrl: SHARE_URL }
+                    },
+                    buttons: [
+                        { title: '청첩장 보기', link: { mobileWebUrl: SHARE_URL, webUrl: SHARE_URL } }
+                    ]
+                });
+                return;
+            } catch (e) { console.log('카카오 공유 실패', e); }
+        }
+        // 카카오 키가 아직 없거나 실패한 경우: 기기 공유창 → 링크 복사 순서로 대체
         if (navigator.share) {
             navigator.share({
                 title: '동재 ♥ 혜령 결혼합니다',
                 text: '2027년 12월 5일 일요일 2:40PM 상록아트홀',
-                url: window.location.href
-            }).catch(console.error);
+                url: SHARE_URL
+            }).catch(() => {});
         } else { copyLink(); }
     }
 
     // --- D-Day 실시간 카운트다운 ---
     function updateDday() {
-        const weddingDate = new Date(2027, 11, 5, 14, 40, 0).getTime(); 
-        const now = new Date().getTime();
-        const distance = weddingDate - now;
-        if (distance < 0) {
-            document.querySelector(".d-day-container").innerHTML = "<p class='d-day-text'>동재, 혜령의 결혼식이 <span class='d-day-highlight'>오늘</span>입니다.</p>";
+        const weddingDate = new Date(2027, 11, 5, 14, 40, 0);
+        const now = new Date();
+        const distance = weddingDate.getTime() - now.getTime();
+        const pre = document.getElementById('ddayPre');
+        const count = document.getElementById('ddayCount');
+        const post = document.getElementById('ddayPost');
+        if (!pre || !count || !post) return;
+
+        // 결혼식 시간이 지난 뒤: 감사 인사
+        if (distance <= 0) {
+            pre.innerText = '동재 ♥ 혜령의 결혼식에';
+            count.innerText = '와주셔서 감사합니다';
+            post.innerText = '행복하게 잘 살겠습니다.';
+            if (window.ddayTimer) { clearInterval(window.ddayTimer); window.ddayTimer = null; }
             return;
         }
+
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        document.getElementById("ddayCount").innerText = `${days}일 ${hours}시간 ${minutes}분 ${seconds}초`;
+
+        // 결혼식 당일: 오늘 날짜 안내 + 남은 시간
+        const isToday = now.getFullYear() === weddingDate.getFullYear()
+            && now.getMonth() === weddingDate.getMonth()
+            && now.getDate() === weddingDate.getDate();
+        if (isToday) {
+            pre.innerText = '오늘, 동재 ♥ 혜령의 결혼식이';
+            count.innerText = `${hours}시간 ${minutes}분 ${seconds}초`;
+            post.innerText = '남았습니다.';
+        } else {
+            pre.innerText = '동재, 혜령의 결혼식이';
+            count.innerText = `${days}일 ${hours}시간 ${minutes}분 ${seconds}초`;
+            post.innerText = '남았습니다.';
+        }
     }
     updateDday();
-    setInterval(updateDday, 1000);
+    window.ddayTimer = setInterval(updateDday, 1000);
 
 
     // --- 티맵 길안내 (앱이 없으면 스토어로 이동) ---
@@ -1224,6 +1283,7 @@
     // 모달 크게 보기 기능
     function openModal(index) {
         currentIndex = index;
+        resetZoom(true);
         modalImage.src = images[currentIndex];
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
@@ -1236,17 +1296,90 @@
 
     function changeSlide(direction) {
         currentIndex = (currentIndex + direction + images.length) % images.length;
+        resetZoom(true);
         modalImage.src = images[currentIndex];
     }
 
-    let touchstartX = 0;
-    let touchendX = 0;
-    modal.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
+    // --- 사진 확대: 두 손가락 확대/축소, 확대 중 드래그 이동, 두 번 탭으로 확대/축소, 기본 배율에서는 좌우 스와이프 ---
+    let zScale = 1, zx = 0, zy = 0;
+    let pinchStartDist = 0, pinchStartScale = 1;
+    let dragStartX = 0, dragStartY = 0, dragStartTx = 0, dragStartTy = 0;
+    let swipeStartX = 0, swipeStartY = 0, hadMultiTouch = false, lastTapTime = 0;
+
+    function applyZoom() {
+        modalImage.style.transform = `translate(${zx}px, ${zy}px) scale(${zScale})`;
+    }
+    function resetZoom(instant) {
+        zScale = 1; zx = 0; zy = 0;
+        modalImage.style.transition = instant ? 'none' : 'transform 0.25s ease';
+        applyZoom();
+    }
+    function touchDist(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+
+    modal.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+            hadMultiTouch = true;
+            pinchStartDist = touchDist(e.touches);
+            pinchStartScale = zScale;
+        } else if (e.touches.length === 1) {
+            hadMultiTouch = false;
+            const t = e.touches[0];
+            swipeStartX = dragStartX = t.clientX;
+            swipeStartY = dragStartY = t.clientY;
+            dragStartTx = zx; dragStartTy = zy;
+        }
+        modalImage.style.transition = 'none';
+    }, { passive: true });
+
+    modal.addEventListener('touchmove', e => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            zScale = Math.min(4, Math.max(1, pinchStartScale * touchDist(e.touches) / pinchStartDist));
+            if (zScale === 1) { zx = 0; zy = 0; }
+            applyZoom();
+        } else if (e.touches.length === 1 && zScale > 1) {
+            e.preventDefault();
+            const t = e.touches[0];
+            zx = dragStartTx + (t.clientX - dragStartX);
+            zy = dragStartTy + (t.clientY - dragStartY);
+            applyZoom();
+        }
+    }, { passive: false });
+
     modal.addEventListener('touchend', e => {
-        touchendX = e.changedTouches[0].screenX;
-        if (touchendX < touchstartX - 40) changeSlide(1);  
-        if (touchendX > touchstartX + 40) changeSlide(-1); 
+        if (e.touches.length > 0) return;
+        if (zScale < 1.05) resetZoom(false);
+        if (hadMultiTouch) return;
+
+        const t = e.changedTouches[0];
+        const dx = t.clientX - swipeStartX;
+        const dy = t.clientY - swipeStartY;
+
+        // 두 번 탭: 확대 ↔ 원래 크기
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && e.target === modalImage) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+                if (zScale > 1) { resetZoom(false); } else { zScale = 2.5; zx = 0; zy = 0; modalImage.style.transition = 'transform 0.25s ease'; applyZoom(); }
+                lastTapTime = 0;
+            } else { lastTapTime = now; }
+            return;
+        }
+
+        // 기본 배율일 때만 좌우 스와이프로 사진 넘기기
+        if (zScale === 1) {
+            if (dx < -40) changeSlide(1);
+            if (dx > 40) changeSlide(-1);
+        }
     });
+
+    // 컴퓨터: 마우스 휠로 확대/축소
+    modal.addEventListener('wheel', e => {
+        e.preventDefault();
+        zScale = Math.min(4, Math.max(1, zScale + (e.deltaY < 0 ? 0.3 : -0.3)));
+        if (zScale === 1) { zx = 0; zy = 0; }
+        modalImage.style.transition = 'none';
+        applyZoom();
+    }, { passive: false });
 
 </script>
 
