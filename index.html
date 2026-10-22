@@ -11,7 +11,7 @@
     <meta property="og:url" content="https://jo-dongjae.github.io/wedding/">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
     <!-- 카카오 공유 SDK -->
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" crossorigin="anonymous"></script>
 
@@ -26,7 +26,7 @@
         
         body { 
             background-color: #222222;
-            font-family: 'Nanum Myeongjo', serif; 
+            font-family: 'Gowun Batang', serif;
             color: #2c2c2c;
             line-height: 1.8; overflow-x: hidden; 
         }
@@ -295,6 +295,19 @@
         .d-day-text { font-size: 1.1rem; color: #555; letter-spacing: 1px; }
         .d-day-highlight { font-size: 1.25rem; color: #1a1a1a; font-weight: 700; margin: 10px 0; display: block; }
 
+        /* D-Day 타이머: 일 / 시 / 분 / 초 네모 칸 */
+        .dday-timer { display: flex; justify-content: center; align-items: flex-start; gap: 6px; margin: 18px 0; }
+        .dday-box {
+            width: 62px; padding: 10px 0 8px; border: 1px solid #2b2b2b; border-radius: 6px; background: #ffffff;
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+        }
+        .dday-num {
+            font-family: 'Cormorant Garamond', 'Gowun Batang', serif; font-size: 1.75rem; font-weight: 600; line-height: 1;
+            color: #1a1a1a; font-variant-numeric: lining-nums tabular-nums;
+        }
+        .dday-unit { font-family: 'Cormorant Garamond', 'Gowun Batang', serif; font-size: 0.7rem; letter-spacing: 1.5px; color: #888; }
+        .dday-colon { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #999; line-height: 1; padding-top: 12px; }
+
         /* 오시는 길 */
         .location { padding: 80px 20px; text-align: center; background-color: #f8f8f8; }
         .venue-info { margin-bottom: 25px; }
@@ -307,7 +320,7 @@
         .btn-copy-address:active { background-color: #2b2b2b; color: #fff; }
         .map-wrapper { width: 100%; height: 280px; margin: 20px 0; border: 1px solid #dddddd; }
         .map-buttons { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
-        .btn-map { display: inline-block; padding: 12px 0; flex: 1; min-width: 0; font-size: 0.85rem; text-decoration: none; font-family: sans-serif; font-weight: 600; text-align: center; border: 1px solid #2b2b2b; background-color: #ffffff; color: #2b2b2b; transition: all 0.2s; }
+        .btn-map { display: inline-block; padding: 12px 0; flex: 1; min-width: 0; font-size: 0.85rem; text-decoration: none; font-family: inherit; font-weight: 700; text-align: center; border: 1px solid #2b2b2b; background-color: #ffffff; color: #2b2b2b; transition: all 0.2s; }
         .btn-map:active { background-color: #2b2b2b; color: #ffffff; }
 
         /* 참석 여부 (RSVP) */
@@ -336,7 +349,7 @@
         .account-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed #e0e0e0; }
         .account-item:last-child { border-bottom: none; }
         .account-info { display: flex; flex-direction: column; gap: 4px; }
-        .bank-details { font-size: 0.95rem; color: #1a1a1a; font-weight: 700; font-family: sans-serif; }
+        .bank-details { font-size: 0.95rem; color: #1a1a1a; font-weight: 700; font-variant-numeric: tabular-nums; }
         .account-holder { font-size: 0.85rem; color: #666; }
         .btn-copy-acc { padding: 6px 12px; background-color: #2b2b2b; border: 1px solid #2b2b2b; border-radius: 4px; font-size: 0.8rem; color: #ffffff; font-family: inherit; cursor: pointer; white-space: nowrap; }
 
@@ -441,6 +454,18 @@
             .write { clip-path: none; }
             body.revealed .write { animation: none; }
         }
+
+        /* 영문 문구: 우아한 세리프체(Cormorant Garamond)로 통일 */
+        .section-subtitle, .cover-date, .calendar-time, .footer-copyright, .env-sub, .env-date-info {
+            font-family: 'Cormorant Garamond', 'Gowun Batang', serif;
+            font-variant-numeric: lining-nums;
+        }
+        .section-subtitle { font-size: 0.95rem; font-weight: 500; }
+        .cover-date { font-size: 1.15rem; font-weight: 600; }
+        .calendar-time { font-size: 1.2rem; font-weight: 600; }
+        .footer-copyright { font-size: 0.9rem; font-style: italic; line-height: 1.6; }
+        .env-sub { font-size: 0.75rem; font-weight: 500; }
+        .env-date-info { font-size: 0.95rem; font-weight: 600; }
 
         /* 토스트 알림 */
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background-color: rgba(30, 30, 30, 0.9); color: #fff; padding: 12px 24px; border-radius: 25px; font-size: 0.85rem; z-index: 10000; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; border: 1px solid #444; }
@@ -601,7 +626,15 @@
 
         <div class="d-day-container">
             <p class="d-day-text" id="ddayPre">동재, 혜령의 결혼식이</p>
-            <span class="d-day-highlight" id="ddayCount">00일 00시간 00분 00초</span>
+            <div class="dday-timer" id="ddayCount">
+                <div class="dday-box"><span class="dday-num">00</span><span class="dday-unit">DAYS</span></div>
+                <span class="dday-colon">:</span>
+                <div class="dday-box"><span class="dday-num">00</span><span class="dday-unit">HOURS</span></div>
+                <span class="dday-colon">:</span>
+                <div class="dday-box"><span class="dday-num">00</span><span class="dday-unit">MIN</span></div>
+                <span class="dday-colon">:</span>
+                <div class="dday-box"><span class="dday-num">00</span><span class="dday-unit">SEC</span></div>
+            </div>
             <p class="d-day-text" id="ddayPost">남았습니다.</p>
         </div>
     </section>
@@ -1091,6 +1124,7 @@
         // 결혼식 시간이 지난 뒤: 감사 인사
         if (distance <= 0) {
             pre.innerText = '동재 ♥ 혜령의 결혼식에';
+            count.className = 'd-day-highlight';
             count.innerText = '와주셔서 감사합니다';
             post.innerText = '행복하게 잘 살겠습니다.';
             if (window.ddayTimer) { clearInterval(window.ddayTimer); window.ddayTimer = null; }
@@ -1106,15 +1140,14 @@
         const isToday = now.getFullYear() === weddingDate.getFullYear()
             && now.getMonth() === weddingDate.getMonth()
             && now.getDate() === weddingDate.getDate();
-        if (isToday) {
-            pre.innerText = '오늘, 동재 ♥ 혜령의 결혼식이';
-            count.innerText = `${hours}시간 ${minutes}분 ${seconds}초`;
-            post.innerText = '남았습니다.';
-        } else {
-            pre.innerText = '동재, 혜령의 결혼식이';
-            count.innerText = `${days}일 ${hours}시간 ${minutes}분 ${seconds}초`;
-            post.innerText = '남았습니다.';
-        }
+        pre.innerText = isToday ? '오늘, 동재 ♥ 혜령의 결혼식이' : '동재, 혜령의 결혼식이';
+        post.innerText = '남았습니다.';
+
+        // 네모 칸 타이머 숫자 갱신 (일 / 시 / 분 / 초)
+        const nums = count.querySelectorAll('.dday-num');
+        [days, hours, minutes, seconds].forEach((v, i) => {
+            if (nums[i]) nums[i].textContent = String(v).padStart(2, '0');
+        });
     }
     updateDday();
     window.ddayTimer = setInterval(updateDday, 1000);
