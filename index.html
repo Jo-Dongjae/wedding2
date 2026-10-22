@@ -57,6 +57,17 @@
         .env-sub { font-size: 0.65rem; color: #888888; letter-spacing: 2px; margin-bottom: 2px; }
         .env-letter h3 { font-size: 1.35rem; color: #1a1a1a; margin-bottom: 2px; font-weight: 700; }
         .env-main-text { font-size: 0.9rem; color: #555555; margin-bottom: 8px; }
+
+        /* 편지지 모서리를 감은 검은 끈 (오른쪽 위: 리본 매듭 / 왼쪽 아래: 끈만) */
+        .env-ribbon {
+            position: absolute; width: 96px; height: 96px; overflow: visible; pointer-events: none;
+            fill: none; stroke: #1a1a1a; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .env-ribbon-tr { top: -14px; right: -14px; }
+        .env-ribbon-bl { bottom: -14px; left: -14px; }
+        /* 꼬인 노끈 결: 같은 선 위에 짧은 밝은 빗금을 겹침 */
+        .env-ribbon .twist { stroke: #5a5a5a; stroke-width: 4; stroke-dasharray: 1.4 2.6; stroke-linecap: butt; }
+        .env-ribbon .knot { fill: #1a1a1a; stroke: none; }
         .env-date-info { 
             font-size: 0.8rem; color: #222222; font-weight: 700; 
             border-top: 1px solid #e2e2e2; padding-top: 6px; width: 85%; letter-spacing: 0.5px; 
@@ -515,6 +526,24 @@
             <h3>동재 ♥ 혜령</h3>
             <p class="env-main-text">소중한 분들을 초대합니다</p>
             <div class="env-date-info">2027. 12. 05. SUN PM 2:40</div>
+            <!-- 오른쪽 위 모서리를 감싼 끈과 리본 매듭 -->
+            <svg class="env-ribbon env-ribbon-tr" viewBox="0 0 96 96" aria-hidden="true">
+                <!-- 모서리를 대각선으로 감싼 한 줄 노끈 + 리본 매듭 -->
+                <g id="twineTR">
+                    <path d="M25 9 L87 71" />
+                    <path d="M56 40 C 45 27, 29 27, 30 38 C 31 48, 45 47, 56 40" />
+                    <path d="M56 40 C 63 26, 79 24, 81 34 C 83 45, 68 48, 56 40" />
+                    <path d="M56 40 C 52 50, 48 58, 42 67" />
+                    <path d="M56 40 C 61 50, 65 57, 72 63" />
+                </g>
+                <use href="#twineTR" class="twist" />
+                <circle cx="56" cy="40" r="5" class="knot" />
+            </svg>
+            <!-- 왼쪽 아래 모서리: 리본 없이 노끈만 감은 모양 -->
+            <svg class="env-ribbon env-ribbon-bl" viewBox="0 0 96 96" aria-hidden="true">
+                <g id="twineBL"><path d="M9 25 L71 87" /></g>
+                <use href="#twineBL" class="twist" />
+            </svg>
         </div>
         <div class="env-front-shade">
             <div class="env-front"></div>
