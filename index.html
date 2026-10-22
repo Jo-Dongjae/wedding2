@@ -20,6 +20,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
+        body.locked { overflow: hidden; }
         
         body { 
             background-color: #222222;
@@ -33,7 +34,7 @@
             position: fixed; inset: 0; background-color: #1a1a1a;
             z-index: 99999; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            transition: opacity 1.2s ease, visibility 1.2s ease;
+            transition: opacity 1.8s ease, visibility 1.8s ease, background-color 1.2s ease;
         }
         .env-wrapper {
             position: relative; width: 300px; height: 200px; cursor: pointer; perspective: 1000px;
@@ -100,20 +101,13 @@
         /* 메인 커버 */
         .main-cover {
             position: relative; height: 100vh; height: 100dvh; text-align: center;
-            background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-            background-size: cover; background-position: center; display: flex; flex-direction: column; color: #ffffff;
+            background-color: #111; display: flex; flex-direction: column; color: #ffffff;
             overflow: hidden;
         }
         .main-cover::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.75) 100%); z-index: 1; }
         .main-cover::after {
             content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 250px;
             background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.95) 80%, #ffffff 100%); z-index: 3;
-        }
-        
-        /* 별빛 애니메이션 캔버스 */
-        #starsCanvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 2;
         }
 
         .cover-text-bottom { position: absolute; bottom: 7%; left: 0; width: 100%; z-index: 4; text-align: center; letter-spacing: 2px; font-family: 'Gowun Batang', serif; }
@@ -149,7 +143,7 @@
             stroke-linecap: round;
             stroke-dasharray: 85;
             stroke-dashoffset: 85;
-            animation: drawWhiteHeart 2s ease-out forwards;
+            animation: drawWhiteHeart 2s ease-out 1.5s forwards paused;
             filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
         }
 
@@ -262,11 +256,14 @@
         .venue-info { margin-bottom: 25px; }
         .venue-name { font-size: 1.2rem; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; letter-spacing: 1px; }
         .venue-address { font-size: 0.95rem; color: #555; word-break: keep-all; }
+        .venue-tel { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.95rem; color: #2b2b2b; text-decoration: none; font-weight: 700; border-bottom: 1px solid #2b2b2b; padding-bottom: 1px; }
+        .venue-tel:active { opacity: 0.6; }
+        .venue-copy-row { margin-top: 4px; }
         .btn-copy-address { margin-top: 12px; padding: 6px 16px; background-color: #ffffff; border: 1px solid #2b2b2b; font-size: 0.8rem; color: #2b2b2b; cursor: pointer; font-family: inherit; transition: all 0.3s; }
         .btn-copy-address:active { background-color: #2b2b2b; color: #fff; }
         .map-wrapper { width: 100%; height: 280px; margin: 20px 0; border: 1px solid #dddddd; }
         .map-buttons { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
-        .btn-map { display: inline-block; padding: 12px 0; width: 48%; font-size: 0.85rem; text-decoration: none; font-family: sans-serif; font-weight: 600; text-align: center; border: 1px solid #2b2b2b; background-color: #ffffff; color: #2b2b2b; transition: all 0.2s; }
+        .btn-map { display: inline-block; padding: 12px 0; flex: 1; min-width: 0; font-size: 0.85rem; text-decoration: none; font-family: sans-serif; font-weight: 600; text-align: center; border: 1px solid #2b2b2b; background-color: #ffffff; color: #2b2b2b; transition: all 0.2s; }
         .btn-map:active { background-color: #2b2b2b; color: #ffffff; }
 
         /* 참석 여부 (RSVP) */
@@ -340,17 +337,91 @@
         .contact-actions { display: flex; gap: 12px; }
         .contact-action-btn { width: 36px; height: 36px; border-radius: 50%; background-color: #2b2b2b; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #ffffff; border: 1px solid #2b2b2b; }
 
+
+        /* ============================================================
+           오프닝 전환 연출
+           편지 → 화면 가득 확대 → 빛이 번지며 → 사진 초점이 맞고
+           → 이름이 한 글자씩 떠오르고 → 하트가 그려지고 → 꽃잎이 내림
+           ============================================================ */
+        .env-wrapper { transform-origin: 50% 15px; will-change: transform; }
+        .env-glow {
+            position: absolute; inset: -70px; border-radius: 50%; pointer-events: none;
+            background: radial-gradient(circle, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 65%);
+            opacity: 0; transition: opacity 1.2s ease 0.3s;
+        }
+        .env-wrapper.open .env-glow { opacity: 1; }
+
+        #envelopeOverlay.zoom { background-color: #fffdf8; }
+        #envelopeOverlay.zoom .env-wrapper { transform: scale(9); transition: transform 1.25s cubic-bezier(0.75, 0, 0.25, 1); }
+        #envelopeOverlay.zoom .env-letter { z-index: 5; }
+        #envelopeOverlay.zoom .env-letter > * { opacity: 0; transition: opacity 0.6s ease 0.2s; }
+        #envelopeOverlay.zoom .env-back,
+        #envelopeOverlay.zoom .env-front,
+        #envelopeOverlay.zoom .env-flap,
+        #envelopeOverlay.zoom .env-glow { opacity: 0; transition: opacity 0.5s ease; }
+
+        .cover-bg {
+            position: absolute; inset: 0; z-index: 0;
+            background: url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center / cover no-repeat;
+            transform: scale(1.3); filter: brightness(1.8) blur(8px); will-change: transform, filter;
+            transition: transform 5s cubic-bezier(0.16, 0.7, 0.2, 1), filter 3s ease-out;
+        }
+        body.revealed .cover-bg { transform: scale(1); filter: none; }
+
+        .name-group { display: inline-flex; }
+        .rv {
+            opacity: 0; transform: translateY(22px); filter: blur(6px);
+            transition: opacity 1s ease, transform 1s cubic-bezier(0.2, 0.7, 0.2, 1), filter 1s ease;
+            transition-delay: calc(var(--d, 0) * 0.16s + 0.9s);
+        }
+        body.revealed .rv { opacity: 1; transform: none; filter: none; }
+        body.revealed .heart-drawing-line { animation-play-state: running; }
+
+        @media (prefers-reduced-motion: reduce) {
+            #envelopeOverlay.zoom .env-wrapper { transform: none; }
+            .cover-bg { transform: none; filter: none; transition: none; }
+            .rv { transform: none; filter: none; transition-duration: 0.3s; transition-delay: 0s; }
+            .heart-drawing-line { animation-delay: 0s; }
+        }
+
+
+
+
+        /* 이름이 손글씨처럼 써지는 효과 (왼쪽에서 오른쪽으로 번지듯 나타남) */
+        .write {
+            display: inline-block; padding: 0 6px;
+            -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 40%, transparent 100%);
+                    mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 40%, transparent 100%);
+            -webkit-mask-size: 300% 100%; mask-size: 300% 100%;
+            -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+            -webkit-mask-position: 100% 0; mask-position: 100% 0;
+        }
+        body.revealed .write { animation: writeIn 1.6s cubic-bezier(0.45, 0.05, 0.4, 1) var(--w, 0s) forwards; }
+        @keyframes writeIn {
+            from { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+            to   { -webkit-mask-position: 0% 0;   mask-position: 0% 0; }
+        }
+        .heart-drawing-line { animation-delay: 2.4s !important; }
+        @media (prefers-reduced-motion: reduce) {
+            .write { -webkit-mask-position: 0 0; mask-position: 0 0; animation: none !important; }
+            .heart-drawing-line { animation-delay: 0s !important; }
+        }
+
+
+        #petalCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+
         /* 토스트 알림 */
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background-color: rgba(30, 30, 30, 0.9); color: #fff; padding: 12px 24px; border-radius: 25px; font-size: 0.85rem; z-index: 10000; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; border: 1px solid #444; }
         .toast.show { opacity: 1; }
     </style>
 </head>
-<body>
+<body class="locked">
 
 <!-- 오프닝 봉투 애니메이션 -->
 <div id="envelopeOverlay" onclick="openInvitation()">
     <div class="env-wrapper" id="envWrapper">
         <div class="env-back"></div>
+        <div class="env-glow"></div>
         <div class="env-letter">
             <span class="env-sub">WEDDING INVITATION</span>
             <h3>동재 ♥ 혜령</h3>
@@ -374,21 +445,20 @@
 <div class="mobile-container">
     <!-- 메인 커버 -->
     <section class="main-cover">
-        <!-- 은은한 별빛 애니메이션 캔버스 -->
-        <canvas id="starsCanvas"></canvas>
+        <div class="cover-bg"></div>
+        <canvas id="petalCanvas"></canvas>
         
         <div class="cover-text-bottom">
             <h1 class="cover-names">
-                동재
+                <span class="write" style="--w:0.9s">동재</span>
                 <span class="animated-white-heart">
                     <svg viewBox="0 0 32 32" class="white-heart-svg">
-                        <!-- 흰색 하트 윤곽선 드로잉 모션 -->
                         <path class="heart-drawing-line" d="M16 27 C 16 27, 4 18, 4 11 C 4 6.5, 7.5 3.5, 11.5 3.5 C 14.2 3.5, 16 5.2, 16 5.2 C 16 5.2, 17.8 3.5, 20.5 3.5 C 24.5 3.5, 28 6.5, 28 11 C 28 18, 16 27, 16 27 Z"/>
                     </svg>
                 </span>
-                혜령
+                <span class="write" style="--w:3.1s">혜령</span>
             </h1>
-            <p class="cover-date">2027. 12. 05. SUN 2:40 PM</p>
+            <p class="cover-date rv" style="--d:21">2027. 12. 05. SUN 2:40 PM</p>
         </div>
     </section>
 
@@ -494,14 +564,21 @@
         <div class="venue-info">
             <p class="venue-name">상록아트홀</p>
             <p class="venue-address">서울특별시 강남구 언주로 508 (선릉역 5번 출구)</p>
-            <button class="btn-copy-address" onclick="copyAddress()">주소 복사</button>
+            <a class="venue-tel" href="tel:0200000000">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                02-000-0000
+            </a>
+            <div class="venue-copy-row">
+                <button class="btn-copy-address" onclick="copyAddress()">주소 복사</button>
+            </div>
         </div>
         <div class="map-wrapper">
             <iframe src="https://maps.google.com/maps?q=서울특별시%20강남구%20언주로%20508%20상록아트홀&t=&z=16&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
         </div>
         <div class="map-buttons">
-            <a href="https://map.kakao.com/link/to/상록아트홀,37.503939,127.042813" target="_blank" class="btn-map">카카오맵</a>
-            <a href="https://map.naver.com/v5/search/상록아트홀" target="_blank" class="btn-map">네이버지도</a>
+            <a href="https://map.kakao.com/link/to/%EC%83%81%EB%A1%9D%EC%95%84%ED%8A%B8%ED%99%80,37.503939,127.042813" target="_blank" class="btn-map">카카오맵</a>
+            <a href="https://map.naver.com/v5/search/%EC%83%81%EB%A1%9D%EC%95%84%ED%8A%B8%ED%99%80" target="_blank" class="btn-map">네이버지도</a>
+            <a href="tmap://route?goalname=%EC%83%81%EB%A1%9D%EC%95%84%ED%8A%B8%ED%99%80&goalx=127.042813&goaly=37.503939" class="btn-map" onclick="return openTmap(event)">티맵</a>
         </div>
     </section>
 
@@ -724,61 +801,62 @@
 <div id="toast" class="toast"></div>
 
 <script>
-    // --- 메인 커버 은은한 별빛 애니메이션 ---
-    const starsCanvas = document.getElementById('starsCanvas');
-    if (starsCanvas) {
-        const ctx = starsCanvas.getContext('2d');
-        let stars = [];
-        const numStars = 45;
+    // --- 꽃잎 효과 (커버가 열릴 때 한 번 흩날림) ---
+    (function () {
+        const cv = document.getElementById('petalCanvas');
+        if (!cv) return;
+        const ctx = cv.getContext('2d');
+        const petals = [];
+        let running = false;
 
-        function resizeCanvas() {
-            starsCanvas.width = starsCanvas.offsetWidth;
-            starsCanvas.height = starsCanvas.offsetHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        function resize() { cv.width = cv.offsetWidth; cv.height = cv.offsetHeight; }
+        window.addEventListener('resize', resize);
+        resize();
 
-        for (let i = 0; i < numStars; i++) {
-            stars.push({
-                x: Math.random() * starsCanvas.width,
-                y: Math.random() * starsCanvas.height,
-                radius: Math.random() * 1.8 + 0.6,
-                alpha: Math.random() * 0.8 + 0.2,
-                speedY: Math.random() * 0.5 + 0.2,
-                speedX: (Math.random() - 0.5) * 0.25,
-                twinkleSpeed: Math.random() * 0.02 + 0.008,
-                twinkleDir: Math.random() > 0.5 ? 1 : -1
-            });
-        }
-
-        function animateStars() {
-            ctx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
-            stars.forEach(star => {
-                star.y += star.speedY;
-                star.x += star.speedX;
-                star.alpha += star.twinkleSpeed * star.twinkleDir;
-
-                if (star.alpha >= 0.95) star.twinkleDir = -1;
-                if (star.alpha <= 0.2) star.twinkleDir = 1;
-
-                if (star.y > starsCanvas.height) {
-                    star.y = 0;
-                    star.x = Math.random() * starsCanvas.width;
-                }
-                if (star.x < 0) star.x = starsCanvas.width;
-                if (star.x > starsCanvas.width) star.x = 0;
-
+        function frame() {
+            ctx.clearRect(0, 0, cv.width, cv.height);
+            for (let i = petals.length - 1; i >= 0; i--) {
+                const p = petals[i];
+                p.y += p.vy; p.phase += p.sway; p.flip += 0.04; p.rot += p.vr;
+                p.x += Math.sin(p.phase) * 0.6 + p.vx;
+                if (p.y > cv.height + 20) { petals.splice(i, 1); continue; }
+                const sz = p.size;
+                ctx.save();
+                ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+                ctx.scale(0.45 + 0.55 * Math.abs(Math.cos(p.flip)), 1);
+                ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
                 ctx.beginPath();
-                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 253, 235, ${star.alpha})`;
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                ctx.moveTo(0, -sz);
+                ctx.bezierCurveTo(sz * 0.9, -sz * 0.6, sz * 0.7, sz * 0.6, 0, sz);
+                ctx.bezierCurveTo(-sz * 0.7, sz * 0.6, -sz * 0.9, -sz * 0.6, 0, -sz);
                 ctx.fill();
-            });
-            requestAnimationFrame(animateStars);
+                ctx.restore();
+            }
+            if (petals.length || spawning) requestAnimationFrame(frame); else running = false;
         }
-        animateStars();
-    }
+
+        let spawning = false;
+        window.launchPetals = function () {
+            resize();
+            spawning = true;
+            let count = 0;
+            const timer = setInterval(() => {
+                for (let k = 0; k < 2; k++) {
+                    petals.push({
+                        x: Math.random() * cv.width, y: -20,
+                        size: 5 + Math.random() * 6,
+                        vy: 0.9 + Math.random() * 1.1, vx: (Math.random() - 0.5) * 0.4,
+                        phase: Math.random() * 6.28, sway: 0.02 + Math.random() * 0.03,
+                        rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.04,
+                        flip: Math.random() * 6.28, alpha: 0.55 + Math.random() * 0.35,
+                        color: Math.random() > 0.5 ? '#ffffff' : '#ffe0e8'
+                    });
+                }
+                if (++count > 45) { clearInterval(timer); spawning = false; }
+            }, 140);
+            if (!running) { running = true; requestAnimationFrame(frame); }
+        };
+    })();
 
     // --- 1. 봉투 열기 애니메이션 & 음악 재생 ---
     let isEnvelopeOpened = false;
@@ -789,7 +867,8 @@
     function openInvitation() {
         if (isEnvelopeOpened) return;
         isEnvelopeOpened = true;
-        
+
+        const overlay = document.getElementById('envelopeOverlay');
         document.getElementById('envWrapper').classList.add('open');
         document.querySelector('.env-guide').style.display = 'none';
 
@@ -800,12 +879,25 @@
             }).catch(e => console.log("BGM 자동 재생 차단됨:", e));
         }
 
-        // 요청하신 2.3초(2300ms) 대기 후 메인 커버 전환
+        // 연출 타임라인
+        //  0.0s 봉투 열림 → 편지가 올라옴
+        //  1.8s 편지가 화면 가득 확대되며 배경이 밝아짐
+        //  3.0s 빛이 걷히며 커버 사진 초점이 맞고, 이름·하트·날짜가 차례로 나타남 + 꽃잎
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const tZoom = reduce ? 600 : 1800;
+        const tReveal = reduce ? 900 : 3000;
+
+        setTimeout(() => overlay.classList.add('zoom'), tZoom);
         setTimeout(() => {
-            const overlay = document.getElementById('envelopeOverlay');
+            document.body.classList.add('revealed');
+            overlay.style.pointerEvents = 'none';
             overlay.style.opacity = '0';
-            setTimeout(() => { overlay.style.display = 'none'; }, 1200);
-        }, 2300);
+            if (!reduce && window.launchPetals) window.launchPetals();
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.body.classList.remove('locked');
+            }, 1900);
+        }, tReveal);
     }
 
     // --- 토스트 알림 ---
@@ -905,6 +997,33 @@
     }
     updateDday();
     setInterval(updateDday, 1000);
+
+
+    // --- 티맵 길안내 (앱이 없으면 스토어로 이동) ---
+    function openTmap(e) {
+        const ua = navigator.userAgent;
+        const isIOS = /iPhone|iPad|iPod/i.test(ua);
+        const isAndroid = /Android/i.test(ua);
+        if (!isIOS && !isAndroid) {
+            e.preventDefault();
+            showToast('티맵은 휴대폰에서 이용할 수 있어요.');
+            return false;
+        }
+        e.preventDefault();
+        const deepLink = 'tmap://route?goalname=' + encodeURIComponent('상록아트홀') + '&goalx=127.042813&goaly=37.503939';
+        const store = isIOS
+            ? 'https://apps.apple.com/kr/app/id431589174'
+            : 'https://play.google.com/store/apps/details?id=com.skt.tmap.ku';
+        let launched = false;
+        const onHide = () => { if (document.hidden) launched = true; };
+        document.addEventListener('visibilitychange', onHide);
+        window.location.href = deepLink;
+        setTimeout(() => {
+            document.removeEventListener('visibilitychange', onHide);
+            if (!launched) window.location.href = store;
+        }, 1800);
+        return false;
+    }
 
     // --- 계좌번호 아코디언 ---
     function toggleAccordion(id) { document.getElementById(id).classList.toggle('show'); }
@@ -1112,6 +1231,7 @@
         if (touchendX < touchstartX - 40) changeSlide(1);  
         if (touchendX > touchstartX + 40) changeSlide(-1); 
     });
+
 </script>
 
 </body>
