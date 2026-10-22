@@ -137,10 +137,11 @@
         .env-name-input::placeholder { color: #aaaaaa; }
         .env-name-input:focus { border-bottom-width: 2px; }
         .env-name-btn {
-            padding: 7px 18px; border: 1px solid #2b2b2b; border-radius: 20px; background: #2b2b2b; color: #ffffff;
-            font-family: inherit; font-size: 0.9rem; cursor: pointer;
+            padding: 6px 4px; border: none; background: none; color: #1a1a1a;
+            font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+            text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px;
         }
-        .env-name-btn:active { background: #4a4a4a; }
+        .env-name-btn:active { opacity: 0.6; }
         .env-name-skip { background: none; border: none; color: #888888; font-family: inherit; font-size: 0.85rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 4px; }
         .env-guide {
             margin-top: 50px; font-size: 1.1rem; color: #555555;
@@ -550,8 +551,7 @@
         </div>
         <button type="button" class="env-name-skip" onclick="skipGuestName()">건너뛰기</button>
     </form>
-    <div class="env-guide" style="display:none">봉투를 터치하여 열어주세요</div>
-</div>
+    <div class="env-guide" style="display:none">봉투를 터치하여 열어주세요</div></div>
 
 <!-- BGM 오디오 & 컨트롤 버튼 -->
 <audio id="bgmAudio" loop preload="auto">
@@ -1020,13 +1020,24 @@
         });
     }
 
+    // 배경음악 재생 (휴대폰은 터치한 그 순간에 시작해야 재생이 허용됨)
+    function startBgm() {
+        if (!bgmAudio || !bgmAudio.paused) return;
+        bgmAudio.play().then(() => {
+            bgmBtn.classList.add('playing');
+            isBgmPlaying = true;
+        }).catch(e => console.log("BGM 자동 재생 차단됨:", e));
+    }
+
+    // 이름 입력/건너뛰기 후 다시 터치할 필요 없이 바로 봉투 열기
     function finishNameStep(delay) {
         const form = document.getElementById('envNameForm');
         form.classList.add('hide');
+        startBgm();
         setTimeout(() => {
             form.style.display = 'none';
-            document.querySelector('.env-guide').style.display = '';
             isNameStepDone = true;
+            openInvitation();
         }, delay);
     }
 
@@ -1038,10 +1049,10 @@
         input.blur();
         try { localStorage.setItem(GUEST_NAME_KEY, name); } catch (err) {}
         writeGuestName(name, true);
-        finishNameStep(1300); // 이름이 다 써진 뒤 "봉투를 터치하여 열어주세요" 표시
+        finishNameStep(1500); // 이름이 다 써지고 잠시 뒤 봉투가 열림
     }
 
-    function skipGuestName() { finishNameStep(400); }
+    function skipGuestName() { finishNameStep(450); }
 
     // 예전에 이름을 적었던 휴대폰이면 바로 이름이 적힌 봉투로 시작
     (function initGuestName() {
@@ -1063,12 +1074,7 @@
         document.getElementById('envWrapper').classList.add('open');
         document.querySelector('.env-guide').style.display = 'none';
 
-        if (bgmAudio && bgmAudio.paused) {
-            bgmAudio.play().then(() => {
-                bgmBtn.classList.add('playing');
-                isBgmPlaying = true;
-            }).catch(e => console.log("BGM 자동 재생 차단됨:", e));
-        }
+        startBgm();
 
         // 연출 타임라인
         //  0.0s 봉투 열림 → 편지가 올라옴
