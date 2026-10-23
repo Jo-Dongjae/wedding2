@@ -359,14 +359,33 @@
         .venue-tel { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.95rem; color: #2b2b2b; text-decoration: none; font-weight: 700; border-bottom: 1px solid #2b2b2b; padding-bottom: 1px; }
         .venue-tel:active { opacity: 0.6; }
         .venue-copy-row { margin-top: 4px; }
-        .btn-copy-address { margin-top: 12px; padding: 6px 16px; background-color: #ffffff; border: 1px solid #2b2b2b; font-size: 0.8rem; color: #2b2b2b; cursor: pointer; font-family: inherit; transition: all 0.3s; }
-        .btn-copy-address:active { background-color: #2b2b2b; color: #fff; }
+        /* 주소 복사: 지도 카드와 어울리는 둥근 알약 모양 + 복사 아이콘 */
+        .btn-copy-address {
+            margin-top: 12px; padding: 7px 16px 7px 13px;
+            display: inline-flex; align-items: center; gap: 6px;
+            background-color: #ffffff; border: none; border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            font-family: inherit; font-size: 0.8rem; font-weight: 700; color: #444444; cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-copy-address svg { width: 14px; height: 14px; flex: none; }
+        .btn-copy-address:active { transform: scale(0.96); box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08); }
         .map-wrapper { width: 100%; height: 280px; margin: 20px 0; border: 1px solid #dddddd; }
-        .map-buttons { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
-        .btn-map { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 0; flex: 1; min-width: 0; font-size: 0.85rem; text-decoration: none; font-family: inherit; font-weight: 700; text-align: center; border: 1px solid #2b2b2b; background-color: #ffffff; color: #2b2b2b; transition: all 0.2s; }
+        /* 지도 앱 버튼: 아이콘 위 · 이름 아래의 둥근 카드 */
+        .map-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+        .btn-map {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            flex: 1; min-width: 0; padding: 11px 0 9px;
+            font-family: inherit; font-size: 0.78rem; font-weight: 700; color: #333333; text-decoration: none; text-align: center;
+            background-color: #ffffff; border: none; border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
         /* 지도 앱 아이콘 (icons 폴더) */
-        .map-icon { width: 20px; height: 20px; border-radius: 5px; flex: none; display: block; box-shadow: 0 0 0 1px #e2e2e2; }
-        .btn-map:active { background-color: #2b2b2b; color: #ffffff; }
+        .map-icon { width: 28px; height: 28px; border-radius: 8px; flex: none; display: block; box-shadow: 0 0 0 1px #ececec; }
+        .btn-map:active { transform: scale(0.96); box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08); }
 
         /* 참석 여부 (RSVP) */
         .rsvp-section { padding: 80px 20px; text-align: center; background-color: #ffffff; }
@@ -513,7 +532,7 @@
         .env-date-info { font-size: 0.95rem; font-weight: 600; }
 
         /* 토스트 알림 */
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background-color: rgba(30, 30, 30, 0.9); color: #fff; padding: 12px 24px; border-radius: 25px; font-size: 0.85rem; z-index: 10000; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; border: 1px solid #444; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background-color: rgba(30, 30, 30, 0.9); color: #fff; padding: 12px 24px; border-radius: 25px; font-size: 0.85rem; z-index: 10000; opacity: 0; transition: opacity 0.3s; pointer-events: none; width: max-content; max-width: calc(100% - 40px); text-align: center; word-break: keep-all; border: 1px solid #444; }
         .toast.show { opacity: 1; }
     </style>
 </head>
@@ -727,7 +746,10 @@
                 02-000-0000
             </a>
             <div class="venue-copy-row">
-                <button class="btn-copy-address" onclick="copyAddress()">주소 복사</button>
+                <button class="btn-copy-address" onclick="copyAddress()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+                    주소 복사
+                </button>
             </div>
         </div>
         <div class="map-wrapper">
@@ -924,6 +946,13 @@
         
         <form id="rsvpForm" onsubmit="submitRsvp(event)">
             <div class="form-group">
+                <label class="form-label">참석 여부</label>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="attend" value="참석" checked onchange="toggleRsvpDetails()"> 참석</label>
+                    <label class="radio-label"><input type="radio" name="attend" value="불참" onchange="toggleRsvpDetails()"> 불참</label>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="form-label">구분</label>
                 <div class="radio-group">
                     <label class="radio-label"><input type="radio" name="side" value="신랑측" checked> 신랑측</label>
@@ -934,7 +963,7 @@
                 <label class="form-label">성함</label>
                 <input type="text" class="rsvp-input" id="rsvpName" placeholder="성함을 입력해주세요" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="rsvpCountGroup">
                 <label class="form-label">동행 인원 (본인 포함)</label>
                 <select class="rsvp-select" id="rsvpCount">
                     <option value="1명">1명</option>
@@ -943,15 +972,17 @@
                     <option value="4명 이상">4명 이상</option>
                 </select>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="rsvpMealGroup">
                 <label class="form-label">식사 여부</label>
                 <div class="radio-group">
-                    <label class="radio-label"><input type="radio" name="meal" value="예정" checked> 식사함</label>
+                    <label class="radio-label"><input type="radio" name="meal" value="식사함" checked> 식사함</label>
                     <label class="radio-label"><input type="radio" name="meal" value="안함"> 안함</label>
                     <label class="radio-label"><input type="radio" name="meal" value="미정"> 미정</label>
                 </div>
             </div>
-            <button type="submit" class="btn-rsvp-submit">참석 의사 전달하기</button>
+            <!-- 자동 스팸 방지용 숨은 칸 (사람에게는 보이지 않음) -->
+            <input type="text" name="website" id="rsvpWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+            <button type="submit" class="btn-rsvp-submit" id="rsvpSubmitBtn">참석 의사 전달하기</button>
         </form>
     </div>
 </div>
@@ -1188,12 +1219,53 @@
         document.getElementById('rsvpModal').style.display = 'none';
         document.body.style.overflow = 'auto';
     }
-    function submitRsvp(e) {
+    // --- 참석 여부 → 구글 시트 저장 ---
+    // 구글 Apps Script를 "웹 앱"으로 배포한 뒤 나오는 주소(https://script.google.com/macros/s/.../exec)를 아래에 붙여넣으세요.
+    const RSVP_ENDPOINT = "https://script.google.com/macros/s/AKfycbyO29hn345P2CIMSlOPp6_L8YbHUkDM7cEyzs4EQEZs9Xm5dZHBnl7TWDgohuFzkqas/exec";
+
+    // 불참을 고르면 인원·식사 칸을 숨김
+    function toggleRsvpDetails() {
+        const absent = document.querySelector('input[name="attend"]:checked').value === '불참';
+        document.getElementById('rsvpCountGroup').style.display = absent ? 'none' : '';
+        document.getElementById('rsvpMealGroup').style.display = absent ? 'none' : '';
+    }
+
+    async function submitRsvp(e) {
         e.preventDefault();
+        const form = document.getElementById('rsvpForm');
+        const btn = document.getElementById('rsvpSubmitBtn');
         const name = document.getElementById('rsvpName').value.trim();
-        closeRsvpModal();
-        showToast(`${name}님, 참석 의사가 전달되었습니다!`);
-        document.getElementById('rsvpForm').reset();
+        if (!name) { showToast('성함을 입력해주세요.'); return; }
+        if (!RSVP_ENDPOINT) { showToast('참석 여부 받기를 준비 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+
+        const attend = form.querySelector('input[name="attend"]:checked').value;
+        const data = new URLSearchParams({
+            attend,
+            side: form.querySelector('input[name="side"]:checked').value,
+            name,
+            count: attend === '불참' ? '-' : document.getElementById('rsvpCount').value,
+            meal: attend === '불참' ? '-' : form.querySelector('input[name="meal"]:checked').value,
+            website: document.getElementById('rsvpWebsite').value
+        });
+
+        // 두 번 눌러서 중복 저장되지 않게 버튼 잠금
+        btn.disabled = true;
+        btn.textContent = '전달하는 중...';
+        try {
+            const res = await fetch(RSVP_ENDPOINT, { method: 'POST', body: data });
+            const json = await res.json();
+            if (json.result !== 'ok') throw new Error(json.message || '저장 실패');
+            closeRsvpModal();
+            showToast(`${name}님, 참석 여부가 전달되었습니다. 감사합니다!`);
+            form.reset();
+            toggleRsvpDetails();
+        } catch (err) {
+            console.log('참석 여부 전달 실패', err);
+            showToast('전달하지 못했어요. 잠시 후 다시 시도해주세요.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '참석 의사 전달하기';
+        }
     }
 
     // --- 복사 관련 기능 ---
